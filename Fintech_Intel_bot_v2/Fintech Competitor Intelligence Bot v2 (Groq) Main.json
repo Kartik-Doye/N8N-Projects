@@ -1,0 +1,1646 @@
+{
+  "name": "Fintech Competitor Intelligence Bot v2 (Groq) Main",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "928bc33e-7bb5-4a93-8c8d-da3d1adb044f",
+      "name": "⏰ Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Razorpay+fintech&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "bd6b619e-d1ab-43bb-80ec-2aba7fbbac8d",
+      "name": "📰 Razorpay News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=PhonePe+India+fintech&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "be52ebfb-aa48-4b24-b2c7-374094081e43",
+      "name": "📰 PhonePe News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Paytm+fintech+India&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "4200ea3f-2455-42b1-b394-727623099500",
+      "name": "📰 Paytm News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Zepto+India+startup+fintech&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "8fab5081-cd80-48c1-b140-caec35163597",
+      "name": "📰 Zepto News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=CRED+India+fintech+startup&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "ca3bd77a-6d85-4348-a63e-78fb6f11c783",
+      "name": "📰 CRED News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "b999b83d-cbf2-43bf-8220-67383536399e",
+      "name": "🔀 Merge News",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().slice(0, 20).map(i =>\n  `${i.json.title || ''}: ${(i.json.contentSnippet || i.json.content || '').toString().replace(/<[^>]*>/g, '').slice(0, 200)}`\n).join('\\n---\\n');\n\nconst prompt = `You are a senior competitive intelligence analyst for Indian fintech.\\n\\nLatest news about Razorpay, PhonePe, Paytm, Zepto, CRED:\\n\\n${items}\\n\\nRespond ONLY in valid JSON with no markdown or code blocks:\\n{\\n  \"headline\": \"single most important finding today\",\\n  \"overall_threat\": \"HIGH\",\\n  \"importance_score\": 8,\\n  \"findings\": [\\n    {\"company\": \"Razorpay\", \"news\": \"key finding\", \"impact\": \"business impact\", \"score\": 8},\\n    {\"company\": \"PhonePe\", \"news\": \"key finding\", \"impact\": \"business impact\", \"score\": 7},\\n    {\"company\": \"Paytm\", \"news\": \"key finding\", \"impact\": \"business impact\", \"score\": 6},\\n    {\"company\": \"Zepto\", \"news\": \"key finding\", \"impact\": \"business impact\", \"score\": 5},\\n    {\"company\": \"CRED\", \"news\": \"key finding\", \"impact\": \"business impact\", \"score\": 5}\\n  ],\\n  \"recommendation\": \"single most important action this week\"\\n}`;\n\nreturn [{ json: { groq_body: JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  messages: [{ role: 'user', content: prompt }],\n  temperature: 0.3,\n  max_tokens: 1024\n}) } }];"
+      },
+      "id": "a0eb91a8-91ba-4467-869e-c4c9e6cf46f5",
+      "name": "📝 Build News Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.groq_body }}",
+        "options": {}
+      },
+      "id": "41328806-2dc9-4258-8a93-120104ce2c4d",
+      "name": "🤖 Groq News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        384
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cpy9vhiC48OHycAp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json?.choices?.[0]?.message?.content || '{}';\nconst clean = raw.replace(/```json|```/g, '').trim();\ntry {\n  return [{ json: { source: 'news', ...JSON.parse(clean) } }];\n} catch (e) {\n  return [{ json: { source: 'news', headline: 'News parse error', overall_threat: 'LOW', importance_score: 1, findings: [], recommendation: 'Manual review needed', error: e.message } }];\n}"
+      },
+      "id": "ba35d71c-9a99-459d-aa5a-28148ff746f2",
+      "name": "⚙️ Parse News",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Razorpay+%28%22new+feature%22+OR+%22product+launch%22+OR+%22pricing%22+OR+%22announced%22+OR+%22partnership%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "9e11e5b6-6393-4f24-bbdb-56db001d9b1d",
+      "name": "🔍 Razorpay Products",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2880
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=PhonePe+%28%22new+feature%22+OR+%22product+launch%22+OR+%22pricing%22+OR+%22UPI%22+OR+%22announced%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "f36d5848-e7e6-406f-bac1-a9ae1e9449f6",
+      "name": "🔍 PhonePe Products",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        3072
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Paytm+%28%22new+feature%22+OR+%22product+launch%22+OR+%22pricing%22+OR+%22payments%22+OR+%22announced%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "5d543127-026f-480b-8329-0dd38bd418d6",
+      "name": "🔍 Paytm Products",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        3264
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Zepto+India+%28%22new+feature%22+OR+%22product%22+OR+%22launched%22+OR+%22quick+commerce%22+OR+%22fintech%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "38845031-0c10-4afa-a77b-2edfae5eed10",
+      "name": "🔍 Zepto Products",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        3456
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=CRED+India+%28%22new+feature%22+OR+%22product+launch%22+OR+%22credit%22+OR+%22cashback%22+OR+%22announced%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "4111316e-0451-40ba-9e75-b7fa2aa625f8",
+      "name": "🔍 CRED Products",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        3648
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "15a8df51-230c-48ee-ba4e-4ed61af549d7",
+      "name": "🔀 Merge Websites",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        3216
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().slice(0, 25).map(i => {\n  const title   = i.json.title || '';\n  const snippet = (i.json.contentSnippet || i.json.content || '')\n    .toString().replace(/<[^>]*>/g, '').slice(0, 250);\n  return title + ': ' + snippet;\n}).join('\\n---\\n');\n\nconst jsonSchema = JSON.stringify({ /* ... schema ... */ }, null, 2);\n\nconst prompt =\n  \"You are a senior product intelligence analyst...\\n\\n\" +\n  (items || \"No product updates found\") + \"\\n\\n\" +\n  \"Respond ONLY in valid JSON:\\n\" + jsonSchema;\n\nreturn [{ json: { groq_body: JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  messages: [{ role: 'user', content: prompt }],\n  temperature: 0.3,\n  max_tokens: 1024\n}) } }];"
+      },
+      "id": "f787220b-12dc-4a04-ae9f-4f4348193f0d",
+      "name": "📝 Build Website Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        3264
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.groq_body }}",
+        "options": {}
+      },
+      "id": "d5542ba7-78d3-4ed8-b349-3d1e9c52ba0e",
+      "name": "🤖 Groq Website",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        3264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cpy9vhiC48OHycAp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json?.choices?.[0]?.message?.content || '{}';\nconst clean = raw.replace(/```json|```/g, '').trim();\ntry {\n  return [{ json: { source: 'website', ...JSON.parse(clean) } }];\n} catch (e) {\n  return [{ json: { source: 'website', headline: 'Website analysis complete', overall_threat: 'LOW', importance_score: 2, findings: [], recommendation: 'Manual review needed', error: e.message } }];\n}"
+      },
+      "id": "ae4710b8-129b-4f53-a18c-3c2087a9660b",
+      "name": "⚙️ Parse Website",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        3264
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search/?q=Razopay&type=posts&sort=new&cId=8756bdcd-f1bd-4115-9ab9-8fcd432c1836&iId=514f244a-c57f-4e62-9b49-95b7b2e8b7de",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-fintech-intel-bot/2.0 (open-source automation)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88e8d772-77df-4f7c-b49b-8b53d78d59f2",
+      "name": "💬 Razorpay Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search/?q=Phone+pay&type=posts&sort=new&cId=750f9676-973b-4025-8eeb-077fbdeec9fb&iId=f588e50f-f5a2-4221-b4cb-3ceab2d83948",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-fintech-intel-bot/2.0 (open-source automation)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "659a5099-4830-4122-af13-df2aca90398e",
+      "name": "💬 PhonePe Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1152
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search/?q=Paytm&type=posts&sort=new&cId=9123fe4f-c1b3-4b3d-a4c4-366d4e54cf87&iId=7eeb66d5-a547-4839-8a29-3f63204d31f0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-fintech-intel-bot/2.0 (open-source automation)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f11bfeac-60ea-40ef-91ae-b2779d350b7c",
+      "name": "💬 Paytm Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search/?q=zepto&type=posts&sort=new&cId=9123fe4f-c1b3-4b3d-a4c4-366d4e54cf87&iId=7eeb66d5-a547-4839-8a29-3f63204d31f0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-fintech-intel-bot/2.0 (open-source automation)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "552760f4-f2a7-483c-a6b7-0b9a0591592c",
+      "name": "💬 Zepto Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1536
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search/?q=CRED&type=posts&sort=new&cId=9123fe4f-c1b3-4b3d-a4c4-366d4e54cf87&iId=7eeb66d5-a547-4839-8a29-3f63204d31f0",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-fintech-intel-bot/2.0 (open-source automation)"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "69aacf24-2f1d-4662-968d-24fa1372f5ab",
+      "name": "💬 CRED Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        1728
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "1a03d7b4-dba0-42c1-8d28-0e2a48f3892f",
+      "name": "🔀 Merge Social",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        1296
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const companies = ['Razorpay','PhonePe','Paytm','Zepto','CRED'];\nconst posts = $input.all().flatMap((item, idx) => {\n  try {\n    const children = item.json?.data?.children || [];\n    return children.slice(0, 4).map(c =>\n      `[${companies[idx]}] r/${c.data?.subreddit}: ${c.data?.title} (score:${c.data?.score}, comments:${c.data?.num_comments})`\n    );\n  } catch (e) { return [`[${companies[idx]}]: no data`]; }\n}).join('\\n---\\n');\n\nconst prompt = `You are analyzing social media sentiment for Indian fintech companies.\\n\\nRecent Reddit posts about Razorpay, PhonePe, Paytm, Zepto, CRED:\\n\\n${posts || 'No posts found in last 24 hours'}\\n\\nAnalyze: overall sentiment, top complaints, top praises, emerging concerns.\\n\\nRespond ONLY in valid JSON with no markdown:\\n{\\n  \"headline\": \"social sentiment finding\",\\n  \"overall_threat\": \"LOW\",\\n  \"importance_score\": 5,\\n  \"findings\": [\\n    {\"company\": \"Razorpay\", \"news\": \"sentiment finding\", \"impact\": \"customer impact\", \"score\": 5}\\n  ],\\n  \"recommendation\": \"action based on social intelligence\"\\n}`;\n\nreturn [{ json: { groq_body: JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  messages: [{ role: 'user', content: prompt }],\n  temperature: 0.3,\n  max_tokens: 1024\n}) } }];"
+      },
+      "id": "39a78b09-7cdf-44a7-affa-3b5b949fbb43",
+      "name": "📝 Build Social Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.groq_body }}",
+        "options": {}
+      },
+      "id": "ceba2755-7482-484b-afce-0a03fcffa80c",
+      "name": "🤖 Groq Social",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        1344
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cpy9vhiC48OHycAp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json?.choices?.[0]?.message?.content || '{}';\nconst clean = raw.replace(/```json|```/g, '').trim();\ntry {\n  return [{ json: { source: 'social', ...JSON.parse(clean) } }];\n} catch (e) {\n  return [{ json: { source: 'social', headline: 'Social analysis complete', overall_threat: 'LOW', importance_score: 2, findings: [], recommendation: 'Monitor social channels', error: e.message } }];\n}"
+      },
+      "id": "648c0ae4-ef1b-49ee-9e51-3b4bc7414640",
+      "name": "⚙️ Parse Social",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Razorpay+%28hiring+OR+layoffs+OR+%22head+of%22+OR+%22VP+of%22+OR+CTO+OR+engineer+OR+%22data+scientist%22%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "bbb8c405-e6b3-42d1-8753-7c893537eba8",
+      "name": "💼 Razorpay Jobs",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=PhonePe+%28hiring+OR+layoffs+OR+%22head+of%22+OR+%22VP+of%22+OR+CTO+OR+engineer%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "a5890683-63fa-4d0f-b5bc-524406f06e34",
+      "name": "💼 PhonePe Jobs",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Paytm+%28hiring+OR+layoffs+OR+restructuring+OR+%22head+of%22+OR+engineer%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "2e2f44fb-529e-4798-b607-18e41166b5f1",
+      "name": "💼 Paytm Jobs",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=Zepto+India+%28hiring+OR+%22head+of%22+OR+CTO+OR+engineer+OR+layoffs%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "fa3f8f14-13d0-4d88-87aa-f5e8f1d8c61e",
+      "name": "💼 Zepto Jobs",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2496
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=CRED+India+%28hiring+OR+%22head+of%22+OR+CTO+OR+engineer+OR+layoffs%29&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "dee43ee3-fc4b-4fdc-bdc4-f368828f603f",
+      "name": "💼 CRED Jobs",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2688
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "25f3a7e7-341d-4b34-9f11-c905f0d35024",
+      "name": "🔀 Merge Jobs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        2256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().slice(0, 20).map(i => i.json.title || '').filter(t => t.length > 0).join('\\n---\\n');\n\nconst prompt = `You are a job-posting intelligence analyst for Indian fintech.\\n\\nRecent hiring news about Razorpay, PhonePe, Paytm, Zepto, CRED:\\n\\n${items || 'No hiring news found'}\\n\\nInfer what each company is building based on hiring patterns.\\n\\nRespond ONLY in valid JSON with no markdown:\\n{\\n  \"headline\": \"key hiring intelligence finding\",\\n  \"overall_threat\": \"MEDIUM\",\\n  \"importance_score\": 7,\\n  \"findings\": [\\n    {\"company\": \"Razorpay\", \"news\": \"hiring pattern\", \"impact\": \"what they are building\", \"score\": 7}\\n  ],\\n  \"recommendation\": \"strategic response to hiring moves\"\\n}`;\n\nreturn [{ json: { groq_body: JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  messages: [{ role: 'user', content: prompt }],\n  temperature: 0.3,\n  max_tokens: 1024\n}) } }];"
+      },
+      "id": "2c9fbc7a-5e9c-4380-bb72-31b56db0ebfc",
+      "name": "📝 Build Jobs Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        2304
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.groq_body }}",
+        "options": {}
+      },
+      "id": "4636ac61-1ddc-47c0-946a-31684258b7c2",
+      "name": "🤖 Groq Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        2304
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cpy9vhiC48OHycAp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json?.choices?.[0]?.message?.content || '{}';\nconst clean = raw.replace(/```json|```/g, '').trim();\ntry {\n  return [{ json: { source: 'jobs', ...JSON.parse(clean) } }];\n} catch (e) {\n  return [{ json: { source: 'jobs', headline: 'Jobs analysis complete', overall_threat: 'LOW', importance_score: 2, findings: [], recommendation: 'Monitor hiring boards', error: e.message } }];\n}"
+      },
+      "id": "178b4c3a-d090-4b76-90bc-f13682b7afd9",
+      "name": "⚙️ Parse Jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        2304
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "id": "d4881633-c9c3-49c2-baac-f4f359031a7a",
+      "name": "🔀 Master Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        1792
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const branches = $input.all().map(i => i.json);\nconst news    = branches.find(b => b.source === 'news')    || { headline: 'No news',    findings: [], importance_score: 0, recommendation: '' };\nconst website = branches.find(b => b.source === 'website') || { headline: 'No website', findings: [], importance_score: 0, recommendation: '' };\nconst social  = branches.find(b => b.source === 'social')  || { headline: 'No social',  findings: [], importance_score: 0, recommendation: '' };\nconst jobs    = branches.find(b => b.source === 'jobs')    || { headline: 'No jobs',    findings: [], importance_score: 0, recommendation: '' };\nconst maxScore = Math.max(news.importance_score||0, website.importance_score||0, social.importance_score||0, jobs.importance_score||0);\nconst prompt = `You are the Chief Intelligence Officer writing a master competitive briefing for Indian fintech.\\n\\nToday's intelligence:\\n\\nNEWS (score ${news.importance_score}/10): ${news.headline}\\nFindings: ${JSON.stringify(news.findings||[])}\\nRecommendation: ${news.recommendation}\\n\\nWEBSITE (score ${website.importance_score}/10): ${website.headline}\\nFindings: ${JSON.stringify(website.findings||[])}\\nRecommendation: ${website.recommendation}\\n\\nSOCIAL (score ${social.importance_score}/10): ${social.headline}\\nFindings: ${JSON.stringify(social.findings||[])}\\nRecommendation: ${social.recommendation}\\n\\nJOBS (score ${jobs.importance_score}/10): ${jobs.headline}\\nFindings: ${JSON.stringify(jobs.findings||[])}\\nRecommendation: ${jobs.recommendation}\\n\\nWrite the MASTER BRIEFING. Respond ONLY in valid JSON with no markdown:\\n{\\n  \"master_headline\": \"single most important finding today\",\\n  \"threat_level\": \"HIGH\",\\n  \"master_score\": ${maxScore},\\n  \"executive_summary\": \"3 sentences max\",\\n  \"top_companies\": [\\n    {\"name\": \"Razorpay\", \"status\": \"most concerning move\", \"score\": 8},\\n    {\"name\": \"PhonePe\", \"status\": \"key development\", \"score\": 7},\\n    {\"name\": \"Paytm\", \"status\": \"key development\", \"score\": 6},\\n    {\"name\": \"Zepto\", \"status\": \"key development\", \"score\": 5},\\n    {\"name\": \"CRED\", \"status\": \"key development\", \"score\": 5}\\n  ],\\n  \"strategic_recommendation\": \"single most important action this week\",\\n  \"watch_next\": [\"thing 1\", \"thing 2\", \"thing 3\"]\\n}`;\nreturn [{ json: { groq_body: JSON.stringify({\n  model: 'llama-3.3-70b-versatile',\n  messages: [{ role: 'user', content: prompt }],\n  temperature: 0.3,\n  max_tokens: 2048\n}) } }];"
+      },
+      "id": "6344c3fd-c831-4283-b03a-f48d84fd1ab4",
+      "name": "📝 Build Master Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.groq_body }}",
+        "options": {}
+      },
+      "id": "adf2668d-3933-444a-afb8-aa0d4c0202f9",
+      "name": "🤖 Groq Master",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        1824
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cpy9vhiC48OHycAp",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════════════════\n//  INTELLIGENCE FORMATTER\n//  n8n Code Node  ·  Parse Groq response → Format for Telegram, Discord, Gmail\n//  Stage : Post-LLM\n//  Output: telegram_message | discord_body | gmail_html | routing metadata\n// ═══════════════════════════════════════════════════════════════════════════\n\n\n// ── 1.  Parse & sanitise raw LLM output ──────────────────────────────────────\n\nconst raw   = $input.first().json?.choices?.[0]?.message?.content ?? '{}';\nconst clean = raw.replace(/```json|```/g, '').trim();\n\n\n// ── 2.  Constants ─────────────────────────────────────────────────────────────\n\n/** Discord embed colour per threat tier (decimal RGB) */\nconst DISCORD_COLOR = {\n  CRITICAL : 0xC0392B,   // deep red\n  HIGH     : 0xE67E22,   // orange\n  MODERATE : 0xF1C40F,   // amber\n  LOW      : 0x27AE60    // green\n};\n\n/** Telegram lead emoji per threat tier */\nconst TIER_EMOJI = {\n  CRITICAL : '🔴',\n  HIGH     : '🟠',\n  MODERATE : '🟡',\n  LOW      : '🟢'\n};\n\n/** Gmail header palette per threat tier */\nconst GMAIL_PALETTE = {\n  CRITICAL : { bg: '#fde8e8', border: '#c0392b', badge: '#c0392b', label: '🔴 CRITICAL' },\n  HIGH     : { bg: '#fef0e7', border: '#e67e22', badge: '#e67e22', label: '🟠 HIGH'     },\n  MODERATE : { bg: '#fef9e7', border: '#f1c40f', badge: '#b8860b', label: '🟡 MODERATE' },\n  LOW      : { bg: '#eafaf1', border: '#27ae60', badge: '#27ae60', label: '🟢 LOW'      }\n};\n\nconst IST_TIMESTAMP = new Date().toLocaleString('en-IN', {\n  timeZone : 'Asia/Kolkata',\n  day      : '2-digit', month: 'short', year: 'numeric',\n  hour     : '2-digit', minute: '2-digit', hour12: true\n});\n\n\n// ── 3.  Schema normaliser (backward-compatible with old & new schema) ─────────\n//\n//  Old schema → new schema field mapping:\n//    top_companies[]           → competitive_radar[]\n//    strategic_recommendation  → strategic_playbook.immediate_action\n//    executive_summary (str)   → executive_summary.situation + .implication\n\nfunction normalise(p) {\n  // ── Threat & score ──\n  const threat = (\n    p.threat_level ??\n    p.briefing_metadata?.threat_level ??\n    'LOW'\n  ).toUpperCase().trim();\n\n  const score = p.master_score ?? p.briefing_metadata?.master_score ?? 0;\n\n  // ── Headline ──\n  const headline = p.master_headline || 'No headline generated';\n\n  // ── Executive summary — object (new) or string (old) ──\n  const summaryRaw = p.executive_summary;\n  const summary =\n    summaryRaw && typeof summaryRaw === 'object'\n      ? [summaryRaw.situation, summaryRaw.implication].filter(Boolean).join(' ')\n      : String(summaryRaw ?? '');\n  const urgency = summaryRaw?.urgency ?? '';\n\n  // ── Companies — competitive_radar (new) or top_companies (old) ──\n  const companies = (p.competitive_radar ?? p.top_companies ?? []).map(c => ({\n    name     : c.company    ?? c.name    ?? 'Unknown',\n    score    : c.intel_score ?? c.score  ?? 0,\n    severity : c.severity   ?? '',\n    signal   : c.detected_signal ?? c.status ?? '',\n    counter  : c.counter_move ?? ''\n  }));\n\n  // ── Strategic playbook — object (new) or flat string (old) ──\n  const playbook        = p.strategic_playbook ?? {};\n  const immediateAction = playbook.immediate_action   ?? p.strategic_recommendation ?? '';\n  const initiative30d   = playbook['30_day_initiative'] ?? '';\n  const avoid           = playbook.do_not_do            ?? '';\n\n  // ── Signal breakdown (new schema only) ──\n  const signals = p.signal_breakdown ?? {};\n\n  // ── Analyst note & watch list ──\n  const analystNote = p.analyst_note ?? '';\n  const watchNext   = Array.isArray(p.watch_next) ? p.watch_next : [];\n\n  return {\n    threat, score, headline,\n    summary, urgency,\n    companies, signals,\n    immediateAction, initiative30d, avoid,\n    analystNote, watchNext\n  };\n}\n\n\n// ── 4.  Telegram formatter ────────────────────────────────────────────────────\n\nfunction buildTelegram(d) {\n  const emoji = TIER_EMOJI[d.threat] ?? '⚪';\n  const lines = [];\n\n  lines.push(\n    `${emoji} *FINTECH COMPETITIVE INTEL*`,\n    `━━━━━━━━━━━━━━━━━━━━━━━`,\n    `*${d.headline}*`,\n    ``,\n    `🎯 Threat: *${d.threat}* · Score: *${d.score}/10*` +\n      (d.urgency ? ` · Urgency: *${d.urgency}*` : ''),\n    ``,\n    `📋 *Executive Summary*`,\n    d.summary || '_No summary available_'\n  );\n\n  if (d.companies.length > 0) {\n    lines.push(``, `📡 *Competitive Radar*`);\n    d.companies.forEach(c => {\n      lines.push(\n        `  • *${c.name}* [${c.score}/10]` +\n          (c.severity ? ` — ${c.severity}` : ''),\n        `    _${c.signal}_`\n      );\n    });\n  }\n\n  if (Object.keys(d.signals).length > 0) {\n    lines.push(``, `📊 *Signal Breakdown*`);\n    Object.entries(d.signals).forEach(([ch, s]) => {\n      lines.push(`  ${ch.toUpperCase()}: ${s.key_signal ?? '—'} _(${s.score}/10)_`);\n    });\n  }\n\n  if (d.immediateAction) {\n    lines.push(``, `⚡ *Immediate Action*`, d.immediateAction);\n  }\n  if (d.initiative30d) {\n    lines.push(``, `🗓 *30-Day Initiative*`, d.initiative30d);\n  }\n  if (d.avoid) {\n    lines.push(``, `❌ *Avoid*`, d.avoid);\n  }\n  if (d.analystNote) {\n    lines.push(``, `💡 *Analyst Note*`, `_${d.analystNote}_`);\n  }\n  if (d.watchNext.length > 0) {\n    lines.push(``, `👀 *Watch Next*`);\n    d.watchNext.forEach(w => lines.push(`  • ${w}`));\n  }\n\n  lines.push(\n    ``,\n    `━━━━━━━━━━━━━━━━━━━━━━━`,\n    `_${IST_TIMESTAMP} IST · n8n Fintech Intel Bot_`\n  );\n\n  // Telegram hard limit: 4096 chars\n  const msg = lines.join('\\n');\n  return msg.length > 4090\n    ? msg.slice(0, 4080) + '…\\n_[truncated]_'\n    : msg;\n}\n\n\n// ── 5.  Discord formatter ─────────────────────────────────────────────────────\n// Limits: description 4096, field value 1024, total embed 6000 chars\n\nconst cap = (str, n) => str.length > n ? str.slice(0, n - 1) + '…' : str;\n\nfunction buildDiscord(d) {\n  const color  = DISCORD_COLOR[d.threat] ?? DISCORD_COLOR.LOW;\n  const fields = [];\n\n  fields.push(\n    { name: '🎯 Threat Level', value: `**${d.threat}**${d.urgency ? ` · ${d.urgency}` : ''}`, inline: true },\n    { name: '📊 Master Score', value: `**${d.score}/10**`,                                       inline: true },\n    { name: '\\u200B',          value: '\\u200B',                                                  inline: true }\n  );\n\n  if (d.immediateAction) {\n    fields.push({ name: '⚡ Immediate Action', value: cap(d.immediateAction, 1024), inline: false });\n  }\n\n  if (d.companies.length > 0) {\n    const radar = d.companies.map(c =>\n      `**${c.name}** [${c.score}/10]${c.severity ? ` · ${c.severity}` : ''}\\n${c.signal}`\n    ).join('\\n\\n');\n    fields.push({ name: '📡 Competitive Radar', value: cap(radar, 1024), inline: false });\n  }\n\n  if (Object.keys(d.signals).length > 0) {\n    const breakdown = Object.entries(d.signals).map(([ch, s]) =>\n      `**${ch.toUpperCase()}** (${s.score}/10): ${s.key_signal ?? '—'}`\n    ).join('\\n');\n    fields.push({ name: '📊 Signal Breakdown', value: cap(breakdown, 1024), inline: false });\n  }\n\n  if (d.initiative30d) {\n    fields.push({ name: '🗓 30-Day Initiative', value: cap(d.initiative30d, 1024), inline: false });\n  }\n\n  if (d.avoid) {\n    fields.push({ name: '❌ Do Not Do', value: cap(d.avoid, 1024), inline: false });\n  }\n\n  if (d.watchNext.length > 0) {\n    fields.push({\n      name   : '👀 Watch Next',\n      value  : cap(d.watchNext.map(w => `• ${w}`).join('\\n'), 1024),\n      inline : false\n    });\n  }\n\n  if (d.analystNote) {\n    fields.push({ name: '💡 Analyst Note', value: cap(`*${d.analystNote}*`, 1024), inline: false });\n  }\n\n  return JSON.stringify({\n    username : 'Fintech Intel Bot',\n    embeds   : [{\n      title      : cap(d.headline, 256),\n      color,\n      description: cap(d.summary, 4096),\n      fields,\n      footer     : { text: `n8n Fintech Intel Bot · ${IST_TIMESTAMP} IST` }\n    }]\n  });\n}\n\n\n// ── 6.  Gmail HTML formatter ──────────────────────────────────────────────────\n// All styles are inline — Gmail strips <style> blocks in some contexts\n\nfunction buildGmail(d) {\n  const p = GMAIL_PALETTE[d.threat] ?? GMAIL_PALETTE.LOW;\n\n  // ── Competitive radar table rows ──\n  const hasCounter   = d.companies.some(c => c.counter);\n  const compRows     = d.companies.map(c => `\n    <tr>\n      <td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0;font-weight:600;color:#1a1a2e;white-space:nowrap\">${c.name}</td>\n      <td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0;text-align:center\">\n        <span style=\"background:#eff2ff;color:#2c3e8c;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:700\">${c.score}/10</span>\n      </td>\n      ${c.severity ? `<td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#666;white-space:nowrap\">${c.severity}</td>` : '<td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0\"></td>'}\n      <td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;line-height:1.5\">${c.signal}</td>\n      ${hasCounter ? `<td style=\"padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#1e6b3a;line-height:1.5\">${c.counter}</td>` : ''}\n    </tr>`).join('');\n\n  // ── Signal breakdown table rows ──\n  const signalRows = Object.entries(d.signals).map(([ch, s]) => `\n    <tr>\n      <td style=\"padding:8px 14px;border-bottom:1px solid #f5f5f5\">\n        <span style=\"font-weight:700;text-transform:uppercase;font-size:11px;color:#888;letter-spacing:0.5px\">${ch}</span>\n      </td>\n      <td style=\"padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;color:#333\">${s.key_signal ?? '—'}</td>\n      <td style=\"padding:8px 14px;border-bottom:1px solid #f5f5f5;text-align:center;white-space:nowrap\">\n        <span style=\"background:#eff2ff;color:#2c3e8c;padding:2px 6px;border-radius:10px;font-size:11px;font-weight:700\">${s.score}/10</span>\n      </td>\n      <td style=\"padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:12px;color:#999;font-style:italic\">${s.what_to_ignore ?? ''}</td>\n    </tr>`).join('');\n\n  // ── Watch next list ──\n  const watchItems = d.watchNext.map(w =>\n    `<li style=\"margin-bottom:6px;color:#444;font-size:14px;line-height:1.6\">${w}</li>`\n  ).join('');\n\n  // ── Playbook cards (3 possible: immediate / 30-day / avoid) ──\n  const playbookCards = [\n    d.immediateAction ? `\n      <div style=\"background:#eff2ff;border-left:3px solid #2c3e8c;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:10px\">\n        <div style=\"font-size:10px;font-weight:700;color:#2c3e8c;letter-spacing:1px;margin-bottom:6px\">⚡ IMMEDIATE ACTION</div>\n        <div style=\"font-size:14px;color:#1a1a2e;line-height:1.6\">${d.immediateAction}</div>\n      </div>` : '',\n    d.initiative30d ? `\n      <div style=\"background:#eafaf1;border-left:3px solid #27ae60;padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:10px\">\n        <div style=\"font-size:10px;font-weight:700;color:#1e8449;letter-spacing:1px;margin-bottom:6px\">🗓 30-DAY INITIATIVE</div>\n        <div style=\"font-size:14px;color:#1a1a2e;line-height:1.6\">${d.initiative30d}</div>\n      </div>` : '',\n    d.avoid ? `\n      <div style=\"background:#fff5f5;border-left:3px solid #c0392b;padding:14px 18px;border-radius:0 8px 8px 0\">\n        <div style=\"font-size:10px;font-weight:700;color:#922b21;letter-spacing:1px;margin-bottom:6px\">❌ DO NOT DO</div>\n        <div style=\"font-size:14px;color:#1a1a2e;line-height:1.6\">${d.avoid}</div>\n      </div>` : ''\n  ].filter(Boolean).join('');\n\n  return `<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif\">\n<div style=\"max-width:700px;margin:32px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09)\">\n\n  <!-- ── Header ── -->\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#1a1a2e\">\n    <tr>\n      <td style=\"padding:28px 32px\">\n        <div style=\"font-size:10px;letter-spacing:2.5px;color:#6b7fa8;font-weight:600;margin-bottom:10px\">CONFIDENTIAL · FINTECH INTELLIGENCE BRIEFING</div>\n        <div style=\"font-size:20px;font-weight:700;color:#ffffff;line-height:1.4\">${d.headline}</div>\n      </td>\n    </tr>\n  </table>\n\n  <!-- ── Threat badge ── -->\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:${p.bg};border-left:4px solid ${p.border}\">\n    <tr>\n      <td style=\"padding:14px 32px\">\n        <span style=\"background:${p.badge};color:#ffffff;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.5px\">${p.label}</span>\n        <span style=\"color:${p.badge};font-size:13px;font-weight:600;margin-left:16px\">\n          Score: ${d.score}/10${d.urgency ? `&nbsp;&nbsp;·&nbsp;&nbsp;${d.urgency}` : ''}\n        </span>\n      </td>\n    </tr>\n  </table>\n\n  <div style=\"padding:28px 32px\">\n\n    <!-- ── Executive Summary ── -->\n    <h2 style=\"margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa\">Executive Summary</h2>\n    <p style=\"margin:0 0 28px;font-size:15px;line-height:1.75;color:#2d2d2d\">${d.summary || '<em>No summary available.</em>'}</p>\n\n    ${d.companies.length > 0 ? `\n    <!-- ── Competitive Radar ── -->\n    <h2 style=\"margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa\">Competitive Radar</h2>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;border:1px solid #ebebeb;border-radius:8px;margin-bottom:28px;overflow:hidden\">\n      <thead>\n        <tr style=\"background:#f8f9fc\">\n          <th style=\"padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">COMPANY</th>\n          <th style=\"padding:10px 14px;text-align:center;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">SCORE</th>\n          <th style=\"padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">SEVERITY</th>\n          <th style=\"padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">DETECTED SIGNAL</th>\n          ${hasCounter ? '<th style=\"padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">COUNTER MOVE</th>' : ''}\n        </tr>\n      </thead>\n      <tbody>${compRows}</tbody>\n    </table>` : ''}\n\n    ${Object.keys(d.signals).length > 0 ? `\n    <!-- ── Signal Breakdown ── -->\n    <h2 style=\"margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa\">Signal Breakdown</h2>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;border:1px solid #ebebeb;border-radius:8px;margin-bottom:28px;overflow:hidden\">\n      <thead>\n        <tr style=\"background:#f8f9fc\">\n          <th style=\"padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">CHANNEL</th>\n          <th style=\"padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">KEY SIGNAL</th>\n          <th style=\"padding:8px 14px;text-align:center;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">SCORE</th>\n          <th style=\"padding:8px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:0.5px;color:#999\">NOISE FILTER</th>\n        </tr>\n      </thead>\n      <tbody>${signalRows}</tbody>\n    </table>` : ''}\n\n    ${(d.immediateAction || d.initiative30d || d.avoid) ? `\n    <!-- ── Strategic Playbook ── -->\n    <h2 style=\"margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa\">Strategic Playbook</h2>\n    <div style=\"margin-bottom:28px\">${playbookCards}</div>` : ''}\n\n    ${d.analystNote ? `\n    <!-- ── Analyst Note ── -->\n    <div style=\"background:#fafafa;border:1px solid #ebebeb;border-radius:8px;padding:16px 20px;margin-bottom:28px\">\n      <div style=\"font-size:10px;font-weight:700;letter-spacing:1px;color:#aaa;margin-bottom:8px\">💡 ANALYST NOTE</div>\n      <p style=\"margin:0;font-size:14px;font-style:italic;color:#555;line-height:1.7\">${d.analystNote}</p>\n    </div>` : ''}\n\n    ${d.watchNext.length > 0 ? `\n    <!-- ── Watch Next ── -->\n    <h2 style=\"margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa\">👀 Watch Next</h2>\n    <ul style=\"margin:0 0 8px;padding-left:18px\">${watchItems}</ul>` : ''}\n\n  </div>\n\n  <!-- ── Footer ── -->\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f8f9fc;border-top:1px solid #ebebeb\">\n    <tr>\n      <td style=\"padding:14px 32px;font-size:11px;color:#bbb\">Generated ${IST_TIMESTAMP} IST</td>\n      <td style=\"padding:14px 32px;text-align:right;font-size:11px;color:#bbb\">n8n Fintech Intel Bot · Groq / Llama 3.3</td>\n    </tr>\n  </table>\n\n</div>\n</body>\n</html>`;\n}\n\n\n// ── 7.  Main execution ────────────────────────────────────────────────────────\n\ntry {\n  const p = JSON.parse(clean);\n  const d = normalise(p);\n\n  return [{\n    json: {\n      // ── Pass all original LLM fields through ──\n      ...p,\n\n      // ── Resolved scalars (safe for downstream nodes) ──\n      master_headline       : d.headline,\n      master_score          : d.score,\n      threat_level          : d.threat,\n      executive_summary_text: d.summary,\n\n      // ── Routing flag ──\n      is_high_threat : ['CRITICAL', 'HIGH'].includes(d.threat) || d.score >= 7,\n\n      // ── Formatted channel outputs ──\n      telegram_message : buildTelegram(d),\n      discord_body     : buildDiscord(d),\n      gmail_html       : buildGmail(d)\n    }\n  }];\n\n} catch (err) {\n\n  // ── Error fallback — keeps all downstream nodes alive ──\n  const fallbackTg =\n    '⚪ *FINTECH INTEL BOT*\\n━━━━━━━━━━━━━━━━━━━━━━━\\n' +\n    '⚠️ Parse error — intelligence run completed but output could not be read.\\n' +\n    '_Check n8n execution logs for details._\\n\\n' +\n    `_${IST_TIMESTAMP} IST_`;\n\n  return [{\n    json: {\n      master_headline       : 'Intelligence run complete — parse error',\n      master_score          : 0,\n      threat_level          : 'LOW',\n      executive_summary_text: 'Output parse failed. Manual review required.',\n      is_high_threat        : false,\n      error                 : err.message,\n      raw_response          : raw.slice(0, 500),\n      telegram_message      : fallbackTg,\n      discord_body          : JSON.stringify({\n        username : 'Fintech Intel Bot',\n        embeds   : [{\n          title      : '⚠️ Parse Error — Manual Review Required',\n          color      : 0x95A5A6,\n          description: `The intelligence run completed but the output could not be parsed.\\n\\n**Error:** ${err.message}`,\n          footer     : { text: `n8n Fintech Intel Bot · ${IST_TIMESTAMP} IST` }\n        }]\n      }),\n      gmail_html : `<div style=\"font-family:Arial,sans-serif;padding:24px;max-width:600px\">\n        <h2 style=\"color:#c0392b\">⚠️ Intelligence Bot — Parse Error</h2>\n        <p>The n8n workflow completed but could not parse the LLM output.</p>\n        <p><strong>Error:</strong> ${err.message}</p>\n        <p style=\"color:#888;font-size:12px\">Generated ${IST_TIMESTAMP} IST</p>\n      </div>`\n    }\n  }];\n}"
+      },
+      "id": "bd5886cd-a0a0-4855-a6d2-701380588b2e",
+      "name": "⚙️ Parse Master",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_threat",
+              "leftValue": "={{ $json.is_high_threat }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cfb5b2a1-bcb3-4253-8024-e90d1b57bde2",
+      "name": "🔍 High Threat?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        1824
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "=",
+        "text": "={{ $json.telegram_message }}",
+        "additionalFields": {
+          "disable_web_page_preview": true,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "6136692b-6370-4eda-8a0e-5774a65caac8",
+      "name": "📤 Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        2112
+      ],
+      "webhookId": "fa9a686b-cf5b-4435-b38a-d9d7a15970d4",
+      "credentials": {
+        "telegramApi": {
+          "id": "yj4Cj88xiuX7woFg",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=",
+        "subject": "=🔴 Fintech Intel — {{ $json.threat_level }} — {{ new Date().toLocaleDateString('en-IN') }}",
+        "message": "={{ $json.gmail_html }}",
+        "options": {}
+      },
+      "id": "351860c8-7571-4759-9736-bde1cb69c95a",
+      "name": "📧 Gmail Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2240,
+        1536
+      ],
+      "webhookId": "52e900c5-f341-430e-b48b-902319b24dfa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CnP5dFhqKchANU1c",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=REPLACE_WITH_YOUR_DISCORD_WEBHOOK_URL",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "rawBody",
+        "options": {}
+      },
+      "id": "fdd159f7-71b2-438c-b9f2-3bdd10dc6784",
+      "name": "📡 Discord Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        1728
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ new Date().toLocaleDateString('en-IN') }}",
+            "Time": "={{ new Date().toLocaleTimeString('en-IN') }}",
+            "Headline": "={{ $json.master_headline }}",
+            "Threat Level": "={{ $json.threat_level }}",
+            "Score": "={{ $json.master_score }}",
+            "Summary": "={{ typeof $json.executive_summary === 'object' ? [($json.executive_summary.situation || ''), ($json.executive_summary.implication || '')].filter(Boolean).join(' ') : String($json.executive_summary_text || $json.executive_summary || '') }}",
+            "Recommendation": "={{ ($json.strategic_playbook && $json.strategic_playbook.immediate_action) || $json.strategic_recommendation || '' }}",
+            "Watch Next": "={{ ($json.watch_next || []).join(', ') }}",
+            "Run ID": "={{ $execution.id }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "f4c53772-ed7a-42e4-85f3-ec3aa1957055",
+      "name": "📊 Log to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        1920
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "lYLgWPOFxXsqFXK8",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        1824
+      ],
+      "id": "75a8c5f0-5fea-4af2-887c-a5b94b4725b7",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "## 🔒 Security Fix\n\n**Hardcoded Groq API key removed.**\n\nBefore activating, create a credential:\n1. Go to **Credentials → New**\n2. Type: **Header Auth**\n3. Name: `Groq API Key`\n4. Header Name: `Authorization`\n5. Header Value: `Bearer gsk_YOUR_KEY`\n\nAlso fixed: `rawContentType` was `\"news\"` on all 5 Groq nodes → corrected to `application/json`.",
+        "height": 342,
+        "width": 310,
+        "color": 2
+      },
+      "id": "4425558a-9ef7-453a-811a-35de08711f82",
+      "name": "Note — Security: Groq Credential",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Bug Fix — CRED Port\n\nCRED Site was wired to **port 3** (same as Zepto) on Merge Websites. n8n silently overwrites duplicate input ports, so CRED data was dropped every run.\n\n✅ Fixed: CRED now connects to **port 4**.",
+        "height": 202,
+        "width": 300,
+        "color": 4
+      },
+      "id": "eece4850-023e-4d0a-bc7a-1e69ec6b2929",
+      "name": "Note — Fix: CRED Port Collision",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        448,
+        1488
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Bug Fix — Reddit Scraping\n\nOld URLs used the browser search page → returned **HTML**. Parse Social expected `data.children` JSON structure → got nothing.\n\n✅ Fixed: URLs now use `.json` endpoint.\n✅ Added `User-Agent` header (Reddit blocks all anonymous bot requests).\n✅ Fixed CRED query: was `type=all`, now `type=link` (consistent with others).",
+        "height": 270,
+        "width": 300,
+        "color": 4
+      },
+      "id": "fa70a89f-4ffa-4596-b629-c15b0b600493",
+      "name": "Note — Fix: Reddit .json API",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        224,
+        2784
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔄 Website Branch → Product RSS\n\nHTTP GET scraping of competitor homepages removed.\n\n**Why it failed:**\n- Razorpay, PhonePe, etc. use React/Next.js — plain HTTP returns a shell `<div id=\"root\"/>`\n- PhonePe & CRED serve Cloudflare challenges to bots\n\n✅ Replaced with **Google News RSS** using product-focused queries.\nCaptures real feature launches, pricing changes, and product announcements reliably.",
+        "height": 332,
+        "width": 348,
+        "color": 3
+      },
+      "id": "1373fdff-6dca-4bc2-91dc-d3fbfbbf9e2f",
+      "name": "Note — Architecture: Product RSS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        224,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 AI Agent Removed\n\nThe Gemini AI Agent was receiving an already-formatted `telegram_message` from Parse Master and told to \"make it professional\" — it degraded the carefully built Markdown structure, stripped sections, and added latency.\n\n✅ Telegram now sends `$json.telegram_message` from Parse Master directly.\n✅ Gemini + Think1 nodes removed (no longer needed).",
+        "height": 296,
+        "width": 300,
+        "color": 6
+      },
+      "id": "34ec0fab-db89-4810-85c0-3a95a7565295",
+      "name": "Note — Removed: AI Agent (Gemini)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        2272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Sheets Field Fixes\n\n**Bug 1**: `$json.strategic_recommendation` was always undefined.\nParse Master outputs this under `strategic_playbook.immediate_action`.\n\n**Bug 2**: `$json.executive_summary` can be an object `{situation, implication}` — was written as `[object Object]` in Sheets.\n\n✅ Fixed both field paths.\n✅ Added **Run ID** column (`$execution.id`) for deduplication.\n✅ False path (LOW threat) already logged — confirmed and kept.",
+        "height": 358,
+        "width": 300
+      },
+      "id": "41e77bec-1317-42a1-ab04-7b1244880ac1",
+      "name": "Note — Fix: Sheets Fields",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        1856
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "⏰ Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "📰 Razorpay News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📰 PhonePe News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📰 Paytm News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📰 Zepto News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📰 CRED News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 Razorpay Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 PhonePe Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 Paytm Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 Zepto Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 CRED Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 Razorpay Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 PhonePe Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 Paytm Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 Zepto Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 CRED Jobs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 Razorpay Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 PhonePe Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 Paytm Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 Zepto Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 CRED Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📰 Razorpay News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📰 PhonePe News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge News",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔀 Merge News": {
+      "main": [
+        [
+          {
+            "node": "📝 Build News Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Build News Prompt": {
+      "main": [
+        [
+          {
+            "node": "🤖 Groq News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Groq News": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Parse News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Parse News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Master Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Merge Websites": {
+      "main": [
+        [
+          {
+            "node": "📝 Build Website Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Build Website Prompt": {
+      "main": [
+        [
+          {
+            "node": "🤖 Groq Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Groq Website": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Parse Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Parse Website": {
+      "main": [
+        [
+          {
+            "node": "🔀 Master Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "💬 Razorpay Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Social",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 PhonePe Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Social",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔀 Merge Social": {
+      "main": [
+        [
+          {
+            "node": "📝 Build Social Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Build Social Prompt": {
+      "main": [
+        [
+          {
+            "node": "🤖 Groq Social",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Groq Social": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Parse Social",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💼 Razorpay Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💼 PhonePe Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Jobs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔀 Merge Jobs": {
+      "main": [
+        [
+          {
+            "node": "📝 Build Jobs Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Build Jobs Prompt": {
+      "main": [
+        [
+          {
+            "node": "🤖 Groq Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Groq Jobs": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Parse Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Master Merge": {
+      "main": [
+        [
+          {
+            "node": "📝 Build Master Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Build Master Prompt": {
+      "main": [
+        [
+          {
+            "node": "🤖 Groq Master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 Groq Master": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Parse Master",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Parse Master": {
+      "main": [
+        [
+          {
+            "node": "🔍 High Threat?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 High Threat?": {
+      "main": [
+        [
+          {
+            "node": "📧 Gmail Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📡 Discord Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📊 Log to Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📤 Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📊 Log to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📰 Paytm News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge News",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "📰 Zepto News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge News",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "📰 CRED News": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge News",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "💬 Paytm Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Social",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "💬 Zepto Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Social",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "💬 CRED Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Social",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "💼 Paytm Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Jobs",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "💼 Zepto Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Jobs",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "💼 CRED Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Jobs",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "📧 Gmail Report": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Discord Webhook": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Log to Sheets": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Parse Social": {
+      "main": [
+        [
+          {
+            "node": "🔀 Master Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "⚙️ Parse Jobs": {
+      "main": [
+        [
+          {
+            "node": "🔀 Master Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "🔍 Razorpay Products": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Websites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 PhonePe Products": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Websites",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔍 Paytm Products": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Websites",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "🔍 Zepto Products": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Websites",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "🔍 CRED Products": {
+      "main": [
+        [
+          {
+            "node": "🔀 Merge Websites",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "📤 Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "055d766a-5f8f-49a6-88c4-a28710e14ea1",
+  "meta": {
+    "instanceId": "3dd74a46457ac12a1c890381ca6be7c790e4304199dbcf643bd82cfe0d3f6893"
+  },
+  "id": "IclsTnimgtrjmnsW",
+  "tags": [
+    {
+      "updatedAt": "2026-05-18T08:38:48.479Z",
+      "createdAt": "2026-05-18T08:38:48.479Z",
+      "id": "E4sBLcoDDEUztDpO",
+      "name": "competitor-intel"
+    },
+    {
+      "updatedAt": "2026-05-18T09:20:43.161Z",
+      "createdAt": "2026-05-18T09:20:43.161Z",
+      "id": "GmPYpPrndRkmQG9S",
+      "name": "groq"
+    },
+    {
+      "updatedAt": "2026-05-18T08:38:48.502Z",
+      "createdAt": "2026-05-18T08:38:48.502Z",
+      "id": "OB1OVaExGfL81aJM",
+      "name": "fintech"
+    },
+    {
+      "updatedAt": "2026-05-18T08:38:48.490Z",
+      "createdAt": "2026-05-18T08:38:48.490Z",
+      "id": "QcxgPQ1PHlJKnpw7",
+      "name": "n8n-only"
+    }
+  ]
+}
