@@ -1,0 +1,478 @@
+{
+  "name": "Create a Complete HR Department with -Agent System",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "hr-chat-trigger",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        1552,
+        -176
+      ],
+      "webhookId": "hr-webhook-id",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {},
+      "id": "hr-think",
+      "name": "Think",
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "position": [
+        1664,
+        80
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in recruitment, job descriptions, candidate screening, and interview questions",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "recruiter-agent",
+      "name": "Recruiter Agent",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        1792,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in writing HR policies, employee handbooks, and compliance documentation",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "policy-writer-agent",
+      "name": "HR Policy Writer",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        2080,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in creating training materials, onboarding programs, and professional development plans",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "training-agent",
+      "name": "Training & Development Specialist",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        3232,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in performance reviews, feedback templates, goal setting, and employee evaluations",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "performance-agent",
+      "name": "Performance Review Specialist",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        2368,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in employee engagement, culture initiatives, team building activities, and internal communications",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "culture-agent",
+      "name": "Employee Engagement Specialist",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        2656,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "toolDescription": "call this AI Agent that specializes in compensation analysis, benefits packages, salary benchmarking, and total rewards communication",
+        "text": "={{ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "id": "compensation-agent",
+      "name": "Compensation & Benefits Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "position": [
+        2944,
+        80
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "=======================================\n        MAX AGENT WITH HR TEAM\n=======================================\n",
+        "height": 320,
+        "width": 580,
+        "color": 5
+      },
+      "id": "header-sticky",
+      "name": "Sticky Note Header",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# MAX Agent with HR Team\n\n## Description\nComplete AI-powered HR department with a Chief Human Resources Officer (MAX) agent orchestrating specialized HR team members for comprehensive people operations.\n\n## Overview\nThis n8n workflow creates a comprehensive human resources department using AI agents. The MAX agent analyzes HR requests and delegates tasks to specialized agents for recruitment, policy development, training, performance management, employee engagement, and compensation analysis.\n\n## Features\n\nStrategic MAX agent using GEMINI Flash 2.5 for complex HR decision-making\nSix specialized HR agents powered by Gemini Flash 2.5 for efficient execution\nComplete HR lifecycle coverage from hiring to retention\nAutomated policy creation and compliance documentation\nPerformance review and goal-setting systems\nEmployee engagement and culture initiatives\nCompensation analysis and benchmarking\n\n## Team Structure\n\nMAX Agent: Strategic HR oversight and task delegation (model)\nRecruiter Agent: Job descriptions, candidate screening, interview questions\nHR Policy Writer: Employee handbooks, policies, compliance documentation\nTraining & Development Specialist: Onboarding programs, learning materials\nPerformance Review Specialist: Reviews, feedback templates, goal setting\nEmployee Engagement Specialist: Culture initiatives, team building, communications\nCompensation & Benefits Analyst: Salary benchmarking, benefits packages\n\n\n## How to Use\n\nImport the workflow into your n8n instance\nDeploy the webhook for chat interactions\nSend HR requests via chat (e.g., \"Create a complete onboarding program for software engineers\")\n\nThe MAX will analyze and delegate to appropriate specialists\nReceive comprehensive HR deliverables\n\n# Use Cases\nComplete Hiring Process: Job postings → Screening → Interviews → Offers\nPolicy Development: Employee handbooks, compliance documentation\nOnboarding Programs: 30-60-90 day plans with training materials\nPerformance Management: Review cycles, feedback systems, development plans\nCulture & Engagement: Surveys, team building activities, recognition programs\nCompensation Strategy: Market analysis, pay equity reviews, benefits design\n\n\n",
+        "height": 2500,
+        "width": 740,
+        "color": 5
+      },
+      "id": "main-sticky",
+      "name": "Sticky Note Main",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        576
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        80
+      ],
+      "id": "12e5e4bc-e1eb-4c91-9c0a-951dd262610c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        288
+      ],
+      "id": "6ea5003f-daf8-4e33-8c09-04bd468bde7a",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2976,
+        288
+      ],
+      "id": "e6e1f8ab-f7f2-40ed-b4f4-196e9b848af5",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        288
+      ],
+      "id": "fa8908a0-78a8-4179-8fed-dc920852e5d9",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        304
+      ],
+      "id": "b9e3b72f-d7cd-4d3c-b8f7-765275d16925",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2448,
+        288
+      ],
+      "id": "8b878575-4ed9-4cfc-9418-191104441b7e",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        304
+      ],
+      "id": "0b7e0e41-8553-4760-8b7f-a09ca86ccd9b",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RJ8HCr7d6j18gCmQ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "chro-agent",
+      "name": "MAX Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2240,
+        -144
+      ],
+      "typeVersion": 2.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recruiter Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Policy Writer": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Performance Review Specialist": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Engagement Specialist": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compensation & Benefits Analyst": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Training & Development Specialist": {
+      "ai_tool": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MAX Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Employee Engagement Specialist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Compensation & Benefits Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HR Policy Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Training & Development Specialist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Performance Review Specialist",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Recruiter Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "040d0fc4-831a-4992-b18c-0141c5c5b4a8",
+  "meta": {
+    "templateId": "6901",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62af42b1f0636660bd3963248eda61d49ddce51612d120059a7968db1243140c"
+  },
+  "id": "Im7I5KBkLaeNt40g",
+  "tags": []
+}

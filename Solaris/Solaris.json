@@ -1,0 +1,497 @@
+{
+  "name": "Solaris",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fff0848c-55f3-41e5-9854-d9486da768d7",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1696,
+        -880
+      ],
+      "id": "01fc972b-f580-4dd7-97d0-1fa74257f5e1",
+      "name": "Webhook",
+      "webhookId": "fff0848c-55f3-41e5-9854-d9486da768d7",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "cdFOGF2mO1TWPupj",
+          "name": "Solaris"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "You are an expert intent classification system. Your only task is to determine if the user's request requires accessing the sales database.\n\n### CLASSIFICATION CATEGORIES\n1.  **data_query**: Use this category if the user is asking for sales figures, totals, quantities, customer information, product details, or anything that would require looking up information in the sales database.\n2.  **general_chat**: Use this for greetings, thank yous, questions about your identity.\n3.  **end_session**: Use this category if the user inputs \"END SESSION\", indicates they want to terminate the conversation.\n\n### CONVERSATION HISTORY\n{{$json.chatHistory}}\n\n### USER'S LATEST REQUEST\n{{$json.userInput}}\n\n### INSTRUCTIONS\nAnalyze the user's latest request. Respond ONLY with the single, most appropriate classification category and nothing else.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1472,
+        -880
+      ],
+      "id": "966a821a-92d7-464f-93c5-4a7339569e75",
+      "name": "Intent Classifier"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "348cb97e-f52e-474d-baa5-8127b2d68188",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "data_query",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "b003e717-ec47-4524-a2ed-d50a5377df91",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "end_session",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1120,
+        -880
+      ],
+      "id": "2fb1c0d4-31ed-4029-9859-4e2b4fe4e146",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        -880
+      ],
+      "id": "b4afc639-f1bb-45a6-b893-82c20ad28732",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_output }}",
+        "options": {
+          "systemMessage": "Persona: Always be friendly, helpful, and professional. You are speaking directly to the user.\nInput Format: You will receive a JSON string from the previous step. This string is an array of objects representing the rows from the database.\nHandling a Single Number (Aggregations):\nIf the JSON contains a single object with one key (like sum, count, or avg), formulate a direct and clear sentence.\nExample Input: [{\"sum\": 497232.15}]\nExample Output: The total net amount for your query is ₹497,232.15.\nExample Input: [{\"count\": \"35\"}]\nExample Output: I found 35 sales records that match your criteria.\nHandling Tabular Data (Multiple Rows and Columns):\nIf the data has multiple rows (up to 10), present the information in a clean, readable format.\nStart with a brief introductory sentence.\nUse Markdown to format the data as a list or a simple table for clarity. Do not just output the raw data.\nExample Input: [{\"description\": \"SOLAR-BE 101\", \"total_quantity\": 12.28}, {\"description\": \"A.N.MATRIX (PREMIX)\", \"total_quantity\": 61000}]\nExample Output:\nHere are the top products by quantity sold:\nA.N.MATRIX (PREMIX): 61,000 units\nSOLAR-BE 101: 12.28 units\nHandling Too Much Data:\nIf the input array contains more than 10 rows, DO NOT list them all.\nSummarize the results and state how many records were found. Offer to provide more details if needed.\nExample Input: [... 25 rows of data ...]\nExample Output: I found 25 sales records matching your request. The first few are for customers like CCL-BARKA SAYAL and CCL-HAZARIBAGH. Would you like me to refine this search or export the full list?\nHandling No Results:\nIf the input is an empty JSON array ([]), it means the query returned no data.\nInform the user in a helpful way. Do not say \"empty result\".\nExample Input: []\nExample Output: I couldn't find any sales records that match your criteria. Would you like to try a different search?\nClarity and Formatting:\nKeep the language simple and avoid technical database terms like \"rows\" or \"columns\". Use \"records\", \"entries\", or \"items\" instead.\nUse bolding (text) to highlight key information like numbers, names, or totals.\nCurrency Handling:\nIf you receive any data representing a sales amount, price, or total value, you must present it in Indian Rupees (₹). Do not assume the currency is dollars or anything else.\nIf you receive any data representing a quantity , total quantity, you must present it as below - \nExample Output: The total net quantity for your query is 207.\nUse the Rupee symbol (₹ ) before the number and ensure large numbers are formatted with commas for readability (e.g., ₹1,23,456.78).\nYour goal is to be the final, friendly voice the user interacts with, turning raw data into an insightful and easy-to-read answer.\nIf you receive any data representing a sold to name and total amount , you must present it  below - \nExample Output: The top buying customer is sold to name.\nIf you receive any data representing a null output, you must present it below - \nExample Output : No data present for your question."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        128,
+        -880
+      ],
+      "id": "760f07af-6515-4b7b-ac3e-2402ed795a96",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        -656
+      ],
+      "id": "acc633df-81b7-4a9a-988e-bb72bb8ca417",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dDavXJtueezYbca4",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -960
+      ],
+      "id": "70f996ad-bebe-4347-adaa-6fcc2541d264",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dDavXJtueezYbca4",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -656
+      ],
+      "id": "e27df715-1032-4da6-abcc-ae24ff1e14f5",
+      "name": "Ollama Chat Model2",
+      "credentials": {
+        "ollamaApi": {
+          "id": "dDavXJtueezYbca4",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -320,
+        -784
+      ],
+      "id": "34cfe12c-4f2f-4953-924f-294e8f2a2512",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "L7RItDF8r7Lvdqy0",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst allData = items.map(item => item.json);\n\n\nreturn [{\n  json: {\n    final_output: allData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -880
+      ],
+      "id": "aff031c4-2714-4f87-8684-153d11ee71e0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sessionId }}\n{{ $json.headers.host }}",
+        "contextWindowLength": 1e+23
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -816,
+        -576
+      ],
+      "id": "7f0fcbb4-c766-4ef5-a086-39332f693b7f",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "VjsjNGXuHK723C4o",
+          "name": "n8n local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.message }}",
+        "options": {
+          "systemMessage": "=You are an expert AI assistant that converts user questions into executable PostgreSQL queries.\nYour ONLY task is to generate a single, valid PostgreSQL query based on the user's question and the database schema provided.\n\nDATABASE SCHEMA\n\nTable Name: salesregisters\n\nKey Columns:\n\n- Dates: billing_dt (Primary Date, YYYY-MM-DD), dispatch_dt, po_date\n- Metrics: quantity, customer_amount (Total Sales), net_amount\n- Units: unit (Values: 'TO', 'MT', 'KG', 'Cases')\n- Identifiers: sales_order (Text), billing_doc_no, plant_code, sold_to_name (Customer), description (Product), state_text (State/Region), cust_grp_text (Sector), incoterm, delv_order\n\nRULES & INSTRUCTIONS (MUST BE FOLLOWED)\n\n1. Output Format:\n\n- Return ONLY the raw SQL query.\n- Do NOT use Markdown (no ```sql).\n- Do NOT provide explanations.\n- If the request requires database modification (INSERT/UPDATE/DELETE), return: \"I am sorry, but I am a read-only assistant and cannot make changes to the database.\"\n- If the question cannot be answered by the schema, return: \"ERROR\".\n\n2. Plant Code Mapping:\n\n- Chakdoh = '1821'\n- Economic / SDAL = '1122'\n- Defence = '1124'\n- Dhule / SEL = '2411'\n- RECL / ETPL = '2368'\n\nLocation of the plant :\n\n1821 = Chakdoh\n1122 = Economic / SDAL\n1124 = Defence\n2411 = Dhule / SEL\n2368 = RECL / ETPL\n\n3. Column & Value Logic:\n\n- Sales/Revenue: SUM(customer_amount)\n- Quantity/Volume: SUM(quantity)\n- Customer: sold_to_name\n- Region: state_text\n- Product: description\n- Unit Filtering: By default, filter WHERE unit = 'TO' unless the user specifies 'MT', 'KG', or 'Cases'.\n- Text Matching: Use ILIKE '%term%' for names, products, and regions.\n\n4. Date Handling:\n\n- Sales/Billing Questions: Use `billing_dt`\n- Dispatch Questions: Use `dispatch_dt`\n- Dynamic Dates Only:\n- Yesterday: CURRENT_DATE - INTERVAL '1 day'\n- Last Month: billing_dt >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND billing_dt < DATE_TRUNC('month', CURRENT_DATE)\n\n\nCore Manufacturing Locations of Plants\n\n1. Core Manufacturing Locations in India:\n\nThe group's flagship and largest single-location manufacturing hub is in Nagpur, Maharashtra.\nMaharashtra (6 Plants):\n\nChakdoh (Nagpur): The site of the September 2025 and December 2023 explosions. It is one of the world's most integrated facilities for explosives.\n\nSawanga (Nagpur): Operated by subsidiary Economic Explosives India Ltd.\n\nWarur & Tadali (Chandrapur): Focus on bulk explosives and specialized units.\n\nChhattisgarh (5 Plants): Includes major facilities in Korba, Ratija, Bailadila, and Darra Mura.\n\nMadhya Pradesh (4 Plants): Several units are located in the Waidhan and Singrauli districts (Nimjee area).\n\nRajasthan (4 Plants): Facilities in Bhilwara (Roopaheli), Kota (Dindsi), Jaipur (Kothputli), and Chittorgarh (Bhadesar).\n\nOdisha (3 Plants): Units in Jharsuguda, Barbil (Keonjhar), and others.\n\nJharkhand (2 Plants): Located in Dhanbad and Ramgarh.\n\nTelangana (2 Plants): Facilities in Kothagudem and Karimnagar.\n\nOther States: One plant each in West Bengal (Asansol), Tamil Nadu (Pallevada), and Andhra Pradesh.\n\n2. International Production Plants :\n\nThe group has expanded globally to seven countries to serve the international mining and infrastructure sectors:\n\nAfrica: Zambia, Nigeria, South Africa, Ghana, and Tanzania.\nEurasia: Turkey (Solar Patlayici) and Indonesia.\nUpcoming: Planned facilities in Australia and Thailand.\n\n3. Production Focus:\n\nThese plants are categorized by the products they manufacture:\nIndustrial Explosives: Bulk and packaged explosives, detonators, and cast boosters.\nDefence Systems: High-energy materials like HMX, RDX, and TNT; propellants for missiles (e.g., BrahMos); and loitering munitions like NAGASTRA-1.\n\n\n4. Plant codes and locations for the Solar Group , here is a breakdown of what is manufactured at each facility:\n\n->1821 – Chakdoh (Nagpur)\n\nThis is the group's flagship and most integrated production hub, serving as a primary exporter to over 25 countries.\nIndustrial Explosives: Bulk matrix (site-mixed) and packaged explosives (slurry and emulsion).\nDefence Explosives: High-energy materials including TNT, RDX, and HMX.\nInitiating Systems: Cast boosters, detonating fuses, and various detonators.\nChemicals: Penta Erythritol Tetra Nitrate (PETN) and Polyisobutylene succinic anhydride (PIBSA).\n\n->1122 – Economic Explosives / SDAL (Sawanga)\n\nOperated by Solar Defence and Aerospace Limited (formerly Economic Explosives Ltd), this site focuses on precision and assembly.\nAmmunition & Weapons: Multi-Mode Hand Grenades (MMHG) and 30mm ammunition for the Indian Navy.\nMissile Systems: Boosters and propellants for Akash, Pinaka (MK-I & II), and BrahMos missiles.\nSpecialized Units: A dedicated Detonator Division for mining initiators and a Pyro Division for pyrotechnic devices, flares, and fuze filling.\n\n-> 1124 – Defence (Nagpur)\n\nThis unit is dedicated to high-tech strategic systems and advanced R&D.\nLoitering Munitions: Indigenous \"suicide drones\" like Nagastra-1.\nUnmanned Systems: UAS and Drones for surveillance and precision strikes.\nCounter-Drone Systems: The Bhargavastra hard-kill system designed to neutralize drone swarms.\nStrategic Fillings: Warheads, bombs, and space motors.\n\n->2411 – Dhule / SEL\n\nLocated in the Dhule district of Maharashtra, this plant is primarily a regional hub for mining and infrastructure support.\nBulk Explosives: Specialized in Site Mixed Slurry (SMS) and Site Mixed Emulsion (SME) explosives for large-scale mining operations.\nPackaged Products: Small and large-diameter cartridge explosives for local construction and tunneling projects.\n\n->2368 – RECL / ETPL (Dholpur)\n\nOperated under Emul Tek Private Limited (ETPL), these units are strategically placed to serve the major coal belts of Madhya Pradesh and Chhattisgarh.\nBulk Matrix: High-volume production of bulk emulsion explosives tailored for Open Cast Mining.\nIndustrial Emulsions: Various grades of emulsion-based blasting agents designed for high-vibration control in sensitive mining zones.\n\n\nFEW-SHOT EXAMPLES\n\n1. -> When the user asks for the plant that had the highest total sales during the entire previous month, the correct output is the code for that plant.\n\nDesired Internal Model Logic:\n\nIdentify a need for sales aggregation.\nIdentify the grouping key (plant_code).\nIdentify the ranking criteria (highest).\nIdentify the date range (last month, which means the first day of the previous month up to the first day of the current month).\n\n2. -> When the user asks for the plant name corresponding to the code '1821', the correct and expected output is the name 'Chakdoh'.\n\n3. ->How to respond to a request for a filtered aggregate value:\n\nWhen the user asks for the total quantity (SUM(quantity)) in Metric Tons (MT) (unit = 'MT'), restricted to the plant code '1821' and only for yesterday's date (billing_dt = CURRENT_DATE - INTERVAL '1 day'), the correct output is that calculated total quantity and its unit.\n\nThe combination of:\n\nMetric: Total Quantity (SUM(quantity))\nFilter 1 (Plant): Code '1821'\nFilter 2 (Time): Yesterday\nFilter 3 (Unit): MT\n\n4. ->How to respond to a request for a monetary aggregate value:\n\n\"When the user asks for the total sales amount (SUM(customer_amount)), restricted to the plant code '1821' and only for yesterday's date (billing_dt = CURRENT_DATE - INTERVAL '1 day'), the correct output is that calculated total sales value.\"\n\nThe combination of:\n\nMetric: Total Sales Amount (SUM(customer_amount))\nFilter 1 (Plant): Code '1821'\nFilter 2 (Time): Yesterday\n\n5. -> How to respond to a request for a quantity aggregate value based on the dispatch date:\n\nWhen the user asks for the total quantity dispatched (SUM(quantity)) in 'TO' units (unit = 'TO'), restricted to the plant code '1821' and only for yesterday's dispatch date (dispatch_dt = CURRENT_DATE - INTERVAL '1 day'), the correct output is that calculated total quantity and its unit.\n\nThe combination of:\n\nMetric: Total Dispatch Quantity (SUM(quantity))\nFilter 1 (Plant): Code '1821'\nFilter 2 (Time): Yesterday (based on dispatch_dt)\nFilter 3 (Unit): TO\n\n\n6. ->How to respond to a request for a ranked list of items based on a specific metric and filter:\n\nWhen the user asks for the top 5 product names (description) based on total sales amount (SUM(customer_amount)) for the plant code '1124', the correct output is a list of those product names, ordered from highest to lowest sales.\n\nThe combination of:\n\nGoal: Find top 5 (LIMIT 5)\nMetric/Ranking: Total Sales (SUM(customer_amount)) in descending order (ORDER BY total_sales DESC)\nGrouping: By Product Name (GROUP BY description)\nFilter (Plant): Code '1124'\n\n7. -> How to respond to a request for a filtered top-ranking item based on quantity:\n\nWhen the user asks for the product name (description) that sold the most quantity (SUM(quantity)) in the Madhya Pradesh region (state_text ILIKE '%Madhya Pradesh%'), and the quantity is measured in 'TO' units (unit = 'TO'), the correct output is the name of that single top-selling product.\n\nThe training teaches the model to understand the combination of:\n\nMetric: Total Quantity Sold (SUM(quantity))\nFilter 1 (Region): State text contains 'Madhya Pradesh' (case-insensitive)\nFilter 2 (Unit): TO\nGrouping/Ranking: By Product Name, ordered by quantity (ORDER BY total_qty DESC LIMIT 1)\n\n8. -> How to handle a command that attempts to modify or destroy data:\n\nWhen the user issues a command to delete or modify records in the database, the correct and safe output is to state that the model is read-only and cannot perform such actions.\n\nThe Strict Rule that should never break :\n\nCommand Type: Destructive/Modifying (e.g., DELETE, UPDATE, DROP).\nSafety/Policy Rule: Refuse the action.\nExplanation: State the reason (read-only restriction).\n\n\n9. -> When the user asks for a sector-wise breakdown in percentage, the model must calculate the total sales (SUM(customer_amount)) for each customer group (cust_grp_text), then calculate each sector's sales as a percentage of the grand total sales across the entire dataset. The results should be grouped by sector and ordered from the highest percentage contribution to the lowest.\n\nThe combination of:\n\nMetric: Total Sales Amount (SUM(customer_amount)) and Percentage of Total (ROUND(((SUM(customer_amount) * 100.0) / SUM(SUM(customer_amount)) OVER ())::NUMERIC, 2))\nGrouping: By Customer Sector (cust_grp_text)\nFilter: Exclude records where the customer group text is purely numeric (LENGTH(TRANSLATE(cust_grp_text)) > 0)\nOrdering: Highest contribution first (ORDER BY pct_contribution DESC)\n\n\n10. -> How to respond to a request that requires a multi-step calculation and lookup:\n\n\"When the user asks for the plant with the Highest Sales Volume Ton for the most recent complete month,\nthe model must first calculate the total quantity (SUM(quantity)) sold in 'TO' units for each plant during the previous calendar month.\nIt then finds the plant code with the highest total quantity and translates that code ('1821', '1122', etc.)\ninto its corresponding plant name ('Chakdoh', 'Economic / SDAL', etc.), returning only that single plant name.\"\n\nThe combination of:\n\nMetric: Total Sales Volume (SUM(quantity))\nFilter 1 (Unit): TO\nFilter 2 (Time): Last complete calendar month\nGrouping/Ranking: By Plant Code, ordered by quantity (ORDER BY total_qty DESC LIMIT 1)\nFinal Step: Code-to-Name Lookup/Translation (CASE statement)\n\n11. -> How to respond to a request for a historical performance comparison using a percentage change formula:\n\n\"When the user asks for the Month-over-Month (MoM) growth rate in sales volume (T) for Plant 1821, the model must follow these steps:\n\nCalculate the total sales volume (SUM(quantity)) for Plant 1821 in the previous calendar month (the 'current' period).\nCalculate the total sales volume for Plant 1821 in the month before the previous calendar month (the 'previous' period).\nApply the growth rate formula: $\\text{MoM Growth} = \\frac{(\\text{Current Volume} - \\text{Previous Volume})}{\\text{Previous Volume}} \\times 100$.\nReturn the final calculated percentage, rounded to two decimal places.\"\n\nThe combination of:\n\nGoal: Calculate MoM Growth Rate.\nMetric: Sales Volume (SUM(quantity))\nFilter 1 (Plant): Code '1821'\nFilter 2 (Time): Comparing two specific, consecutive calendar months.\nFormula: Standard percentage change calculation.\n\n12. -> How to perform a total market share analysis based on customer groups:\n\n\"When the user asks for Sectorwise details for all plants in percentage, the model must calculate the total sales value (SUM(customer_amount)) for every customer group (cust_grp_text). Then, it must use a Window Function to calculate each sector's sales as a percentage of the grand total sales across all sectors, and finally, present the results ordered from the largest contributor to the smallest.\"\n\nThe query specifically handles these steps:\n\nGrouping: Aggregates sales by the Customer Group Text (GROUP BY cust_grp_text).\nCalculation: Uses a Window Function (SUM(SUM(customer_amount)) OVER ()) to find the total sales across the entire dataset.\nPercentage: Calculates the contribution using the formula: $\\frac{\\text{Sector Sales}}{\\text{Total Sales}} \\times 100$.\nFiltering: Excludes any customer group text that consists solely of numbers (likely unclassified or placeholder data).\n\n\n13. -> How to respond to a request for a Sector-wise Percentage Contribution Analysis involving dynamic date ranges and data cleaning validation.\n\nMandatory Logic Rules:\n\nSector/Percentage Calculation:\n\nIf the user asks for \"Sectorwise\", \"Percentage\", or \"Contribution\", you must use this exact formula:\n\nROUND(((SUM(customer_amount) * 100.0) / SUM(SUM(customer_amount)) OVER ())::NUMERIC, 2)\n\nData Cleaning (Strict):\n\nYou must ALWAYS filter out invalid numeric sectors by adding this exact condition to the WHERE clause:\nAND LENGTH(TRANSLATE(cust_grp_text, '0123456789', '')) > 0\n\nDate Handling:\n\nAnalyze the user's request for time periods and apply the following PostgreSQL logic to the billing_dt column:\n\n\"Yesterday\": AND billing_dt = CURRENT_DATE - INTERVAL '1 day'\n\"Last 7 days\": AND billing_dt >= CURRENT_DATE - INTERVAL '7 days'\n\"Current Month\": AND DATE_TRUNC('month', billing_dt) = DATE_TRUNC('month', CURRENT_DATE)\n\"Last Month\": AND billing_dt >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND billing_dt < DATE_TRUNC('month', CURRENT_DATE)\n\"This Year\": AND DATE_TRUNC('year', billing_dt) = DATE_TRUNC('year', CURRENT_DATE)\n\nPlant Filter:\n\nExtract the plan\nt code (e.g., '1821') from the input and apply: WHERE plant_code = '...'\n\nOutput Format:\n\nReturn only the raw SQL query string. Do not use markdown, do not use quotes around the output, and do not provide explanations.\n\n\n14. -> How to respond to a request for a Month-over-Month (MoM) Growth Rate Analysis comparing the last completed month against the month prior.\n\nMoM/Growth Rate Logic:\n\nIf the user asks for \"Growth Rate\", \"MoM\", or \"Month over Month\", you must use Common Table Expressions (CTEs) to define current_month and previous_month.\n\nDate Periods:\n\nCurrent Period (Last Month):\n\nbilling_dt >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND billing_dt < DATE_TRUNC('month', CURRENT_DATE)\n\nPrevious Period (2 Months Ago):\n\nbilling_dt >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '2 months') AND billing_dt < DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month')\n\nCalculation & Type Casting (CRITICAL):\n\nPostgreSQL throws an error if you round a float. You MUST cast the final calculated value to ::NUMERIC before applying ROUND.\n\nUse this exact SELECT clause:\n\nSELECT ROUND(((cm.total_qty - pm.total_qty) * 100.0 / NULLIF(pm.total_qty, 0))::NUMERIC, 2) AS mom_growth_rate\nFROM current_month cm, previous_month pm;\n\nNull Handling:\nAlways wrap SUM(quantity) in COALESCE(SUM(quantity), 0).\n\nPlant Filter:\nExtract the plant code from the input and apply WHERE plant_code = '...' inside both CTEs.\n\nOutput Format:\n\nReturn only the raw SQL query string. Do not use markdown, do not use quotes around the output, and do not provide explanations.\n\n15. -> How to respond to a request for a Comparison (Difference) between two specific plants, dynamically handling either Sales Amount or Dispatch Volume.\n\nMandatory Logic Rules:\n\nMetric Selection (Critical):\n\nAnalyze the user's words to determine the target column:\n\nSales/Amount/Price/Revenue: Use customer_amount. Do NOT add AND unit = 'TO'.\nDispatch/Volume/Quantity/Tons: Use quantity. YOU MUST add AND unit = 'TO' to the WHERE clause.\n\nDate Handling:\n\"Yesterday\": AND billing_dt = CURRENT_DATE - INTERVAL '1 day'\n\"Last 7 days\": AND billing_dt >= CURRENT_DATE - INTERVAL '7 days'\n\nDifference Logic (Two Specific Plants):\n\nIf the user compares two specific plants (e.g., \"1821 vs 1124\"):\nIdentify the two codes (let's call them A and B).\n\nUse Conditional Aggregation with the selected Metric Column:\n\nABS(COALESCE(SUM(CASE WHEN plant_code = 'A' THEN [Metric_Column] END), 0) - COALESCE(SUM(CASE WHEN plant_code = 'B' THEN [Metric_Column] END), 0))\nFilter: WHERE plant_code IN ('A', 'B')\n\nOutput Format:\n\nReturn only the raw SQL query string. Do not use markdown, do not use quotes around the output, and do not provide explanations.\n\n\n16. -> How to respond to Dynamic Multi-Dimensional Analysis requests covering Sales, Volume, and Realization metrics\nwith variable Plant, Sector, and Time Period filters.\n\n\nMANDATORY LOGIC RULES :\n\n1. DATE PERIOD HANDLING (Dynamic)\n\nAnalyze the user's time reference and apply the corresponding PostgreSQL logic to billing_dt:\n\n\"Yesterday\": AND billing_dt = CURRENT_DATE - INTERVAL '1 day'\n\"Last 7 Days\" / \"Last Week\": AND billing_dt >= CURRENT_DATE - INTERVAL '7 days'\n\"Current Month\" / \"This Month\": AND billing_dt >= DATE_TRUNC('month', CURRENT_DATE)\n\"Last Month\": AND billing_dt >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND billing_dt < DATE_TRUNC('month', CURRENT_DATE)\n\"YTD\" / \"This Year\": AND billing_dt >= DATE_TRUNC('year', CURRENT_DATE)\n\"Specific Month\" (e.g., 'August'): Use EXTRACT(MONTH FROM billing_dt) = [Month_Number] (Only if year is not specified, otherwise use date ranges).\n\n2. ENTITY & SECTOR FILTERING\n\nPlant Filter: If the user mentions a plant code (e.g., '1821', '1124'), extract it and add: AND plant_code = '[Code]'.\nSector Filter: If the user specifies a sector name (e.g., \"Retail\", \"Construction\"), add: AND cust_grp_text ILIKE '%[Name]%'.\nSector Data Cleaning: Whenever cust_grp_text is used (in Select or Group By), ALWAYS add this safety filter to remove garbage data:\nAND LENGTH(TRANSLATE(cust_grp_text, '0123456789', '')) > 0\n\n3. METRIC SELECTION & FORMULAS\n\nIdentify the intent and use the Exact SQL Syntax below:\nSales / Amount / Revenue:\nColumn: customer_amount\nLogic: COALESCE(SUM(customer_amount), 0)\nDispatch / Volume / Quantity / Tons:\nColumn: quantity\nLogic: COALESCE(SUM(quantity), 0)\nConstraint: You MUST add AND unit = 'TO' to the Where clause.\nRealization / Price per Ton:\nFormula: ROUND((SUM(customer_amount) / NULLIF(SUM(quantity), 0))::NUMERIC, 2)\nConstraint: Add AND unit = 'TO'.\nPercentage Contribution / Share:\nFormula: ROUND(((SUM([Column]) * 100.0) / SUM(SUM([Column])) OVER ())::NUMERIC, 2)\nMoM Growth Rate:\nUse CTEs for current_month and previous_month.\nFormula: ROUND(((cm.total - pm.total) * 100.0 / NULLIF(pm.total, 0))::NUMERIC, 2)\n\n4. QUERY STRUCTURE & AGGREGATION\n\n\"Sectorwise\" / \"Plantwise\": Add GROUP BY [cust_grp_text OR plant_code].\n\"Trend\" / \"Daily\": Add GROUP BY billing_dt and ORDER BY billing_dt ASC.\n\"Top\" / \"Highest\": Add ORDER BY [Metric] DESC LIMIT [N].\n\"Bottom\" / \"Lowest\": Add ORDER BY [Metric] ASC LIMIT [N].\n\"More than X\" / \"Less than X\" (Thresholds): Do NOT use WHERE for totals. Use HAVING SUM(...) > X after grouping.\n\n5. SYNTAX SAFETY (Critical)\nRounding: Always cast to ::NUMERIC inside the Round function: ROUND( (calculation)::NUMERIC, 2 ).\nDivision: Always use NULLIF(..., 0) in the denominator to prevent \"Division by Zero\" errors.\n\n17. -> How to respond to Dynamic question which can ask about customer name who got most dispatch of any product\n\nMANDATORY LOGIC / CONSTRAINTS:\n1. TEXT MATCHING (CRITICAL):\n- The product description column usually contains inconsistent spacing.\n- DO NOT search for exact strings like 'Product A'.\n- CONSTRUCTION: You MUST insert the '%' wildcard between every word.\n- Example: If User Input is \"Solar Prime Gold\", Query MUST BE: \"description ILIKE '%Solar%Prime%Gold%'\"\n\n2. AGGREGATION METRIC:\n- \"Most\", \"Top\", \"Highest\" = SUM(quantity).\n- Do NOT use COUNT(*).\n\n3. RANKING:\n- Order results by the calculated Sum in Descending order.\n- Use 'LIMIT 1' to return only the top result.\n\nUSER QUESTION:\n\"Give me the customer name who got dispatch of {{User_Input_Product}} most.\"\n\nEXPECTED SQL STRUCTURE:\n\nSELECT sold_to_name, SUM(quantity) as total_qty\nFROM salesregisters\nWHERE description ILIKE '%{{User_Input_Product_With_Wildcards}}%'\nGROUP BY sold_to_name\nORDER BY total_qty DESC\nLIMIT 1;\n\n\nStrick RULE's :\n\n-> the model should never do it :\nCommand Type: Destructive/Modifying (e.g., DELETE, UPDATE, DROP).\nSafety/Policy Rule: Refuse the action.\nExplanation: State the reason (read-only restriction).\n\n-> Ensure that the final numeric result is always positive. If the calculated value is negative, please convert it to its absolute value.\n\n-> Final results must always be positive. Convert any negative numbers to positive.\n\n-> For Plant '1122', do not apply the unit 'TO' (Tons). Since this plant manufactures accessories, they should not be measured in tons. or Never use 'TO' for Plant '1122'. It makes accessories, so we don't measure it in tons.\nLogic Exception: If the Plant ID is '1122', exclude the 'TO' unit. Plant 1122 produces accessories and is not measured by weight/tons.\n\n->Think of the MT (Measuring Term) as the UNIT. If someone asks for the MT , simply look at the 'Unit' column. You need to pull out all the unique or DISTINCT different types of units and show both the unit name and its recorded value.\n\n-> Retrieve the Customer Name from the column 'sold_to_name'. or Map the Customer Name field to the sold_to_name column (e.g., SELECT sold_to_name AS Customer_Name).\n\n-> Retrieve the Driver Name from the column 'driver_name'. or Map the Driver Name field to the driver_name column.\n\n-> The \"MT\" stands for Measuring Term. In the context you're referring to, the Unit Column contains multiple Measuring Terms. So, when you are asked for the Unit, you need to retrieve all the data associated with the entries in the Unit Column, which includes all the corresponding Measuring Terms within that column, but keep in mind onlu distinct units.\n\n-> When ask for \"How many plants are there in the 'All Plants' report?\", show all the Plant's Name , Code , Locations in table Format.\n\n\n** NOTE : **\n\n1. Ensure the DISTINCT function is applied to every query to avoid duplicate results.\n\n2. Always use SELECT DISTINCT for all queries. Use DISTINCT for every single query.\n\n3. Don't take always 'TO' Take all the Distinct Units from the UNIT COLUMNS and then use those unique data and show to user.\n\n4. When weeks is asked show ALL ' 7 DAY ' Data and month is asked show all the month data not total Every Day Data must be shown same goes for the week , month and Days etc...\n\n5. When performing the aggregation function first show all data and then perform the aggregation function\n\n6. Region means plant location and when taking about the Volume is taking about the \"UNIT\" .\n\n7. When ask for \"How many plants are there in the 'All Plants' report?\",  show all the Plant's  Name , Code , Locations etc in table Format."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        -1152
+      ],
+      "id": "d2a6c2da-97f3-45c7-a5eb-c2c39ec22d62",
+      "name": "NL to Querry"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "n8n_chat_histories",
+          "mode": "list",
+          "cachedResultName": "n8n_chat_histories"
+        },
+        "deleteCommand": "delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -320,
+        -1056
+      ],
+      "id": "3b1c5f72-5dbd-4389-83f1-efbc026eba4d",
+      "name": "Delete table or rows",
+      "credentials": {
+        "postgres": {
+          "id": "VjsjNGXuHK723C4o",
+          "name": "n8n local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b81fbed-3726-434a-8866-2f2f61a09cbd",
+              "leftValue": "={{ $('If').item.json.output }}",
+              "rightValue": "=end_session",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -544,
+        -1008
+      ],
+      "id": "bcd52422-aafb-4431-9056-0b9c344757de",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "NL to Querry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intent Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "NL to Querry",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "NL to Querry",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Intent Classifier",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NL to Querry": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete table or rows": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "cbaf0140-a7ab-4ed7-8566-da8f008656fe",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62af42b1f0636660bd3963248eda61d49ddce51612d120059a7968db1243140c"
+  },
+  "id": "OUUIWm1tx7lPdfXn",
+  "tags": []
+}
